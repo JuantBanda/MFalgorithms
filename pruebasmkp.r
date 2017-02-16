@@ -132,120 +132,10 @@ for (cc in 1:length(casos)){#inicio de casos
 #############################
 Temp=1
 alpha=1/10^(7)
-ba=1
-conta=0
-##########################3
-sumq=sum(b)
-for (i in 1:m){
-	mu[i]=sumq/(sum(w[i,])-pm[i])
-}
-#print(mu)
-muf=mu
-
-for(i in 1:20){
-muc=(mui+muf)/2
-s=generadorSol(muc)
-#print(s)
-x = round(s)
-#print(x)
-factibilidad=(pm-w %*% x)
-if(sum(factibilidad>=0)==m){
-	#print("factible")
-	v1=EvaluaBeneficio(x)
-#	print(v)
-	muf=muc
-	}
-	else{
-		mui=muc
-	}
-#	print(muc)
-}
-#print(v1)
-#print(muc)
-#print("----------------segunda version---------------------")
-#print(m)
-
-EvaluaFactibilidad_kp <- function(x,wx){
-	return((pm-(t(x) %*% wx))/pm)
-}
-
-###
-generadorSol_kp <- function(imu,wx){
-	for(i in 1:n){
-		sol[i] = 1 / (1 + exp((-b[i]+imu*wx[i])/Temp^2))
-	}
-return(sol)
-}
-
-Temp=1
-#set.seed(Sys.time())
-#ptm <- proc.time()
-#ptmo = ptm
-mu = vector(mode = "numeric", length=m)
-for(r in 1:m){
-	mui=0
-	mui=0
-	muf=0.5
-	fmui=0
-	fmuf=0
-	wx=w[r, 1:n]
-	sc=generadorSol_kp(mui,wx)
-	x =round(sc)
-	fmui=EvaluaFactibilidad_kp(x,wx)
-	sc=generadorSol_kp(muf,wx)
-	x = round(sc)
-
-	fmuf=EvaluaFactibilidad_kp(x,wx)
-	while(TRUE){
-		#print(muf)
-		if(fmui<0 && fmuf < 0){
-					mui=muf
-					fmui=fmuf
-					muf=3*muf
-					sc=generadorSol_kp(muf,wx)
-					x=round(sc)
-					fmuf=EvaluaFactibilidad_kp(x,wx)
-		}
-		if(fmui<0 && fmuf >= 0){##
-			muc=(mui+muf)/2
-			sc=generadorSol_kp(muc,wx)
-			x =round(sc)
-			fmuc=EvaluaFactibilidad_kp(x,wx)
-			if(fmuc<0){
-				mui=muc
-				fmui=fmuc
-			}
-			else{
-					muf=muc
-					fmuf=fmuc
-			}
-		}##
-		difmu=abs(mui-muf)
-		if(difmu < 0.001){break}
-	}
-	#print(muf)
-	mu[r]=muf
-}
-
-mu=mu/(.94*m)
-#print(mu)
-
-scmc=generadorSol(mu)
-x = round(scmc)
-factibilidad=EvaluaFactibilidad(x)
-vscmr= EvaluaBeneficio(x)
-#print("*****")
-#print(factibilidad)
-#print(vscmr)
-#print(x)
-v2=vscmr
-#print("-------------------------------------")
-
-
-#print("tercera versión")
 mu = vector(mode = "numeric", length=m)
 priomu = vector(mode = "numeric", length=m)
 con=0
+mejorval=0
 #print(mu)
 set.seed(Sys.time())
 ptm <- proc.time()
@@ -256,21 +146,21 @@ while(TRUE){
 	factibilidad=(pm-w %*% x)
 	if(sum(factibilidad>=0)==m){
 		#break
-		print(EvaluaBeneficio(x))
 		con=con+1
-		if(con==3){
+		val=EvaluaBeneficio(x)
+		if(val>mejorval){
+			mejorval=val
+			gen=con
+		}
+		if(con==50){
 			break
 		}
 	}
-	for(i in 1:m){
+	for(i in 1:m){#factible
 		if(factibilidad[i]>=0){
-			#print("factible")#factible
 			mu[i]=mu[i]-mu[i]*.01
-			#mu[i]=mu[i]-alpha*(pm[i]-w[i,] %*% x)
-
 		}
-		else{
-			#print("infactible")#infactible
+		else{#infactible
 			mu[i]=mu[i]-alpha*(pm[i]-w[i,] %*% x)
 		}
 	}
@@ -278,18 +168,9 @@ while(TRUE){
 }
 ptm = proc.time() - ptmo
 tcm=ptm[1]
-#############################
-#print(mu)
-
-	scmr = x
-	vscmr= EvaluaBeneficio(scmr)#valor de la sol de cm redondeado
-	mejormu=mu
-	#print(mu)
-	#print(vscmr)
-	v3=vscmr
 
 #####################################################
-cat(instn, v1,v2,v3,"gap>","\n")
+cat(instn, mejorval,gen,"\n")
 #####################################################
 
 }#repeticiones
